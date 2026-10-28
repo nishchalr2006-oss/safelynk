@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isControlRoomAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'administrator';
+    }
+
+    // User profiles - Only owner or admin can read/write
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isControlRoomAdmin();
+    }
+
+    // Devices collection - Only assigned wearer or admin can read
+    match /devices/{deviceId} {
+      allow read: if isAuthenticated() && (resource.data.wearerId == request.auth.uid || isControlRoomAdmin());
+      allow write: if isControlRoomAdmin();
+    }
+
+    // Telemetry logs - Private health & pulse readings. Only wearer or admin can access.
+    match /telemetry/{logId} {
+      allow read: if isAuthenticated() && (resource.data.wearerId == request.auth.uid || isControlRoomAdmin());
+      allow write: if isControlRoomAdmin() || (isAuthenticated() && request.resource.data.wearerId == request.auth.uid);
+    }
+
+    // SOS Events - Wearer, verified guardian, or Control Room Admin
+    match /sos_events/{eventId} {
+      allow read: if isAuthenticated() && (
+        resource.data.wearerId == request.auth.uid ||
+        resource.data.guardianIds.hasAny([request.auth.uid]) ||
+        isControlRoomAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.wearerId == request.auth.uid;
+      allow update: if isControlRoomAdmin() || (isAuthenticated() && resource.data.wearerId == request.auth.uid);
+    }
+
+    // Authorized Contacts - Only wearer can manage their guardians
+    match /contacts/{contactId} {
+      allow read, write: if isAuthenticated() && (resource.data.wearerId == request.auth.uid || request.resource.data.wearerId == request.auth.uid || isControlRoomAdmin());
+    }
+  }
+}

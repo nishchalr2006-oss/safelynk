@@ -8,6 +8,7 @@ import { TrustedContactDashboard } from './components/TrustedContactDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AboutTeamPage } from './components/AboutTeamPage';
 import { AuthModal } from './components/AuthModal';
+import { EcosystemDocsModal } from './components/EcosystemDocsModal';
 import { ToastContainer, ToastMessage } from './components/Toast';
 
 export default function App() {
@@ -15,6 +16,7 @@ export default function App() {
   const [activeSOS, setActiveSOS] = useState<SOSEvent | null>(api.getActiveSOS());
   const [activeTab, setActiveTab] = useState<'home' | 'wearer' | 'trusted' | 'admin' | 'about'>('home');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isDocsOpen, setIsDocsOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   useEffect(() => {
@@ -100,6 +102,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         onOpenAuth={() => setIsAuthOpen(true)}
         onLogout={handleLogout}
+        onOpenDocs={() => setIsDocsOpen(true)}
       />
 
       {/* Main View Port */}
@@ -136,6 +139,12 @@ export default function App() {
         onClose={() => setIsAuthOpen(false)}
         onLoginDemoRole={handleLoginDemoRole}
         onLoginCredentials={handleLoginCredentials}
+      />
+
+      {/* Complete Ecosystem & Setup Instructions Modal */}
+      <EcosystemDocsModal
+        isOpen={isDocsOpen}
+        onClose={() => setIsDocsOpen(false)}
       />
 
       {/* Toast Notification Container */}

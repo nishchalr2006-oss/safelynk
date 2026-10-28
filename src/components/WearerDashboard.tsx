@@ -18,7 +18,12 @@ import {
   Key,
   Copy,
   Check,
-  RotateCcw
+  RotateCcw,
+  Bot,
+  Sparkles,
+  HelpCircle,
+  CheckCircle,
+  X
 } from 'lucide-react';
 
 interface WearerDashboardProps {
@@ -147,11 +152,50 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
   // Test Mode toggle state
   const [testModeEnabled, setTestModeEnabled] = useState(false);
 
+  // Check-In Flow State (Requirement 3: "SAFELYNK: ARE YOU OKAY?" 20s countdown)
+  const [showCheckInModal, setShowCheckInModal] = useState(false);
+  const [checkInTimer, setCheckInTimer] = useState(20);
+
+  // AI Assistant Panel State (Requirement 8)
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  // Trigger Check-In countdown timer effect
+  useEffect(() => {
+    if (!showCheckInModal) return;
+    const interval = setInterval(() => {
+      setCheckInTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setShowCheckInModal(false);
+          onShowToast('error', 'Check-In Unanswered!', 'Auto-escalating to Emergency SOS!');
+          executeSOSTrigger();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [showCheckInModal]);
+
   const latestReading = sensorHistory[sensorHistory.length - 1] || {
     heartRate: 75,
     heartRateSignalQuality: 98,
     motionMagnitude: 1.0,
-    sensorStatus: 'nominal'
+    sensorStatus: 'nominal',
+    isValidReading: true
+  };
+
+  const handleAskAI = async () => {
+    setIsAiLoading(true);
+    try {
+      const explanation = await api.explainReadingWithAI(latestReading);
+      setAiExplanation(explanation);
+    } catch {
+      setAiExplanation('Sensor readings are non-diagnostic optical PPG estimates. Heart rate fluctuates naturally with physical exertion or motion.');
+    } finally {
+      setIsAiLoading(false);
+    }
   };
 
   const copyDeviceToken = () => {
@@ -580,13 +624,126 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
         </div>
       </div>
 
-      {/* 5. AUDIT TIMELINE */}
+      {/* 5. AI ASSISTANT WELLNESS & TELEMETRY GUIDE PANEL (REQUIREMENT 8) */}
+      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-indigo-950 border border-indigo-800 text-cyan-400 rounded-xl">
+              <Bot className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <span>SAFELYNK AI Assistant (Non-Diagnostic)</span>
+                <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950 border border-cyan-800 px-2 py-0.5 rounded">
+                  Gemini 3.8 Flash
+                </span>
+              </h3>
+              <p className="text-xs text-slate-400">Contextual telemetry insights in cautious, non-medical language.</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setShowCheckInModal(true);
+                setCheckInTimer(20);
+                onShowToast('info', 'Check-In Triggered', 'Simulated check_in_required event from backend.');
+              }}
+              className="px-3 py-1.5 rounded-xl bg-amber-950 border border-amber-800 text-amber-300 text-xs font-bold transition-all hover:bg-amber-900"
+            >
+              ⏱️ Trigger Check-In Flow (20s)
+            </button>
+
+            <button
+              onClick={handleAskAI}
+              disabled={isAiLoading}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold text-xs shadow-lg transition-all flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>{isAiLoading ? 'Analyzing...' : 'Ask AI to Explain Reading'}</span>
+            </button>
+          </div>
+        </div>
+
+        {aiExplanation && (
+          <div className="p-4 bg-slate-950/90 border border-indigo-900/80 rounded-2xl text-xs text-slate-200 leading-relaxed relative">
+            <p className="font-semibold text-cyan-300 mb-1 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>AI Telemetry Overview:</span>
+            </p>
+            <p>{aiExplanation}</p>
+            <div className="mt-2 text-[10px] text-slate-500 border-t border-slate-900 pt-2 italic">
+              ⚠️ Medical Disclaimer: Sensor readings are non-diagnostic optical estimates from MAX30102 PPG. Pulse rate fluctuates naturally during exercise or movement. High BPM is not a medical diagnosis. AI explanations never delay or cancel an SOS alert.
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 6. AUDIT TIMELINE */}
       <ActivityTimeline
         sosHistory={sosHistory}
         safetyCheck={safetyCheck}
         notificationLogs={notificationLogs}
         sensorHistory={sensorHistory}
       />
+
+      {/* REQUIREMENT 3: "SAFELYNK: ARE YOU OKAY?" CHECK-IN MODAL */}
+      {showCheckInModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in">
+          <div className="bg-slate-900 border-2 border-amber-500 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-6 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-2 bg-amber-500 animate-pulse"></div>
+
+            <div className="w-16 h-16 mx-auto rounded-full bg-amber-950 border border-amber-600 text-amber-400 flex items-center justify-center shadow-lg animate-bounce">
+              <AlertCircle className="w-10 h-10" />
+            </div>
+
+            <div>
+              <span className="text-[11px] font-mono font-black text-amber-300 bg-amber-950 px-3 py-1 rounded-full border border-amber-800 uppercase tracking-widest">
+                CHECK-IN REQUIRED
+              </span>
+              <h2 className="text-2xl font-black text-white mt-2">SAFELYNK: ARE YOU OKAY?</h2>
+              <p className="text-xs text-slate-300 mt-1 max-w-sm mx-auto">
+                Elevated heart rate or sudden motion spike detected. Please confirm your status before auto-escalation.
+              </p>
+            </div>
+
+            {/* Countdown Badge */}
+            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 inline-block">
+              <p className="text-[10px] text-slate-400 font-mono">AUTOSCALATION IN</p>
+              <p className="text-3xl font-black font-mono text-amber-400 animate-pulse">{checkInTimer}s</p>
+            </div>
+
+            {/* Actions */}
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <button
+                onClick={() => {
+                  setShowCheckInModal(false);
+                  onShowToast('success', 'User Confirmed Safe', 'Check-in response recorded: Wearer is OKAY.');
+                }}
+                className="py-4 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-xl transition-all flex flex-col items-center justify-center gap-1"
+              >
+                <CheckCircle className="w-6 h-6" />
+                <span>I AM OKAY</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowCheckInModal(false);
+                  executeSOSTrigger();
+                }}
+                className="py-4 px-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-black text-sm shadow-xl transition-all flex flex-col items-center justify-center gap-1"
+              >
+                <ShieldAlert className="w-6 h-6" />
+                <span>SEND SOS</span>
+              </button>
+            </div>
+
+            <p className="text-[10px] text-slate-500">
+              Note: The wearable vibration motor is triggered by ESP32 hardware upon receiving backend command.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

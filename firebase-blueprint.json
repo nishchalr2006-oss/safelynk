@@ -1,0 +1,53 @@
+{
+  "entities": [
+    {
+      "name": "users",
+      "description": "Registered wearers, guardians, and control room operators",
+      "fields": [
+        { "name": "uid", "type": "string", "description": "Firebase Auth UID" },
+        { "name": "email", "type": "string", "description": "User email address" },
+        { "name": "displayName", "type": "string", "description": "Full name" },
+        { "name": "role", "type": "string", "description": "wearer | trusted_contact | administrator" },
+        { "name": "createdAt", "type": "string", "description": "ISO timestamp" }
+      ]
+    },
+    {
+      "name": "devices",
+      "description": "Registered ESP32 hardware wearables",
+      "fields": [
+        { "name": "deviceId", "type": "string", "description": "Hardware identifier e.g. SAFELYNK-001" },
+        { "name": "wearerId", "type": "string", "description": "Assigned wearer user ID" },
+        { "name": "deviceTokenHash", "type": "string", "description": "Hashed bearer authentication token" },
+        { "name": "connectionStatus", "type": "string", "description": "online | offline" },
+        { "name": "lastSeenAt", "type": "string", "description": "ISO timestamp" }
+      ]
+    },
+    {
+      "name": "telemetry",
+      "description": "Continuous time-series sensor readings from MAX30102 PPG & MPU6050",
+      "fields": [
+        { "name": "deviceId", "type": "string", "description": "Device ID" },
+        { "name": "heartRateBpm", "type": "number", "description": "Estimated PPG pulse rate" },
+        { "name": "heartRateValid", "type": "boolean", "description": "Optical signal confidence flag" },
+        { "name": "irSignal", "type": "number", "description": "Raw IR light reflectance sample" },
+        { "name": "accelerationMagnitude", "type": "number", "description": "Combined G-force magnitude in m/s^2" },
+        { "name": "movementEvent", "type": "string", "description": "normal | fall | high_g" },
+        { "name": "timestamp", "type": "string", "description": "ISO timestamp" }
+      ]
+    },
+    {
+      "name": "sos_events",
+      "description": "Emergency SOS incidents and check-in escalations",
+      "fields": [
+        { "name": "eventId", "type": "string", "description": "Unique incident ID" },
+        { "name": "uniqueEventId", "type": "string", "description": "Idempotency key" },
+        { "name": "wearerId", "type": "string", "description": "Wearer user ID" },
+        { "name": "triggerSource", "type": "string", "description": "sos_manual | sos_unanswered | physical_button" },
+        { "name": "status", "type": "string", "description": "active | acknowledged | resolved" },
+        { "name": "latitude", "type": "number", "description": "GPS latitude" },
+        { "name": "longitude", "type": "number", "description": "GPS longitude" },
+        { "name": "createdAt", "type": "string", "description": "ISO timestamp" }
+      ]
+    }
+  ]
+}

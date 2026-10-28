@@ -76,7 +76,18 @@ const VALID_DEVICE_TOKENS = new Set([
   'tok_esp32_wearer_sarah_01'
 ]);
 
-// Helper to send real emails via Resend or Express Relay with guaranteed exact GPS coordinates
+import { GoogleGenAI } from '@google/genai';
+
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  httpOptions: {
+    headers: {
+      'User-Agent': 'aistudio-build'
+    }
+  }
+});
+
+// Helper to send real emails via Resend or Express Relay with guaranteed exact GPS coordinates and exact template
 async function dispatchEmergencyEmail(
   alertId: string,
   recipientEmail: string,
@@ -86,58 +97,66 @@ async function dispatchEmergencyEmail(
   wearerPhone: string,
   triggerSource: string,
   latitude: number | null,
-  longitude: number | null
+  longitude: number | null,
+  heartRate?: number | null,
+  movementStatus?: string
 ): Promise<NotificationAudit> {
   const appUrl = process.env.APP_URL || 'https://ais-pre-aal6yuriqkf2lfg7ne5bnf-662167995161.asia-southeast1.run.app';
   
-  // Guarantee non-null exact latitude & longitude coordinates (fallback to real-time active fix)
-  const finalLat = (latitude !== null && latitude !== undefined && latitude !== 0) ? Number(latitude) : 12.971598;
-  const finalLng = (longitude !== null && longitude !== undefined && longitude !== 0) ? Number(longitude) : 77.594562;
+  const hasValidGps = (latitude !== null && latitude !== undefined && latitude !== 0 && longitude !== null && longitude !== undefined && longitude !== 0);
+  const finalLat = hasValidGps ? Number(latitude) : 12.971598;
+  const finalLng = hasValidGps ? Number(longitude) : 77.594562;
 
   const trackingUrl = `${appUrl}?sosId=${alertId}&lat=${finalLat.toFixed(6)}&lng=${finalLng.toFixed(6)}`;
-  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${finalLat.toFixed(6)},${finalLng.toFixed(6)}`;
+  const googleMapsUrl = hasValidGps ? `https://www.google.com/maps/search/?api=1&query=${finalLat.toFixed(6)},${finalLng.toFixed(6)}` : 'Location unavailable';
+
+  const formattedTime = new Date().toISOString();
+  const alertTypeLabel = triggerSource === 'safety_check_timeout' ? 'unanswered check-in' : 'manual SOS';
+  const hrText = heartRate ? `${heartRate} BPM` : 'unavailable';
+  const moveText = movementStatus || 'normal';
+  const locationText = hasValidGps ? `${finalLat.toFixed(6)}°, ${finalLng.toFixed(6)}°` : 'Location unavailable';
+  const mapLinkText = hasValidGps ? googleMapsUrl : 'Unavailable';
 
   let providerMsgId = `resend_${Date.now()}_${Math.floor(Math.random() * 89999 + 10000)}`;
   let status: NotificationAudit['deliveryStatus'] = 'delivered';
   let errorDetails: string | undefined = undefined;
+
+  const emailSubject = `SAFELYNK SOS ALERT`;
+  const emailTextBody = `An SOS alert was triggered by SAFELYNK device ESP32-SL-8842 at ${formattedTime}.\n\nAlert type: ${alertTypeLabel}\nHeart-rate reading: ${hrText}\nMovement status: ${moveText}\nLocation: ${locationText}\nMap link: ${mapLinkText}\n\nPlease follow your organization's emergency response procedure.`;
 
   if (resendClient && process.env.RESEND_API_KEY) {
     try {
       const emailRes = await resendClient.emails.send({
         from: 'SAFELYNK Control Room <alerts@safelynk.org>',
         to: [recipientEmail],
-        subject: `🚨 CRITICAL SOS EMERGENCY ALARM: ${wearerName} Needs Immediate Assistance!`,
+        subject: emailSubject,
+        text: emailTextBody,
         html: `
-          <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #070B14; color: #F1F5F9; padding: 28px; border-radius: 16px; max-width: 620px; margin: 0 auto; border: 2px solid #EF4444; shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.3);">
-            <div style="background-color: #DC2626; color: #FFFFFF; padding: 16px 20px; border-radius: 12px; font-weight: 900; font-size: 20px; text-align: center; tracking: 1px;">
-              ⚠️ URGENT SOS EMERGENCY PANIC ALARM
+          <div style="font-family: Arial, sans-serif; background-color: #070B14; color: #F1F5F9; padding: 24px; border-radius: 12px; max-width: 600px; margin: 0 auto; border: 2px solid #EF4444;">
+            <div style="background-color: #DC2626; color: #FFFFFF; padding: 14px 18px; border-radius: 8px; font-weight: bold; font-size: 18px; text-align: center;">
+              ⚠️ SAFELYNK SOS ALERT
             </div>
             
-            <p style="margin-top: 22px; font-size: 15px; color: #F8FAFC; line-height: 1.6;">
-              Attention <strong>${recipientName}</strong>,
-              <br/><br/>
-              A critical emergency distress signal has been triggered for <strong>${wearerName}</strong> (${wearerPhone}).
+            <p style="margin-top: 20px; font-size: 15px; color: #E2E8F0; line-height: 1.5;">
+              An SOS alert was triggered by SAFELYNK device <strong>ESP32-SL-8842</strong> at <strong>${formattedTime}</strong>.
             </p>
 
-            <div style="background-color: #0F172A; border: 1px solid #334155; padding: 18px; border-radius: 12px; margin: 20px 0;">
-              <p style="margin: 0 0 10px 0; color: #94A3B8; font-size: 13px;"><strong>Recipient Control Address:</strong> <span style="color: #38BDF8; font-weight: bold;">${recipientEmail}</span></p>
-              <p style="margin: 0 0 10px 0; color: #94A3B8; font-size: 13px;"><strong>Trigger Source:</strong> <span style="color: #F87171; font-weight: bold;">${triggerSource.toUpperCase().replace('_', ' ')}</span></p>
-              <p style="margin: 0 0 10px 0; color: #94A3B8; font-size: 13px;"><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
-              <p style="margin: 0 0 10px 0; color: #94A3B8; font-size: 13px;"><strong>Wearer Phone:</strong> <a href="tel:${wearerPhone}" style="color: #38BDF8; text-decoration: underline;">${wearerPhone}</a></p>
-              <p style="margin: 0; color: #94A3B8; font-size: 13px;"><strong>Exact GPS Coordinates:</strong> <span style="color: #4ADE80; font-family: monospace; font-weight: bold;">${finalLat.toFixed(6)}° N, ${finalLng.toFixed(6)}° E</span></p>
+            <div style="background-color: #0F172A; border: 1px solid #334155; padding: 16px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0 0 8px 0; color: #94A3B8; font-size: 13px;"><strong>Alert type:</strong> <span style="color: #F87171; font-weight: bold;">${alertTypeLabel}</span></p>
+              <p style="margin: 0 0 8px 0; color: #94A3B8; font-size: 13px;"><strong>Heart-rate reading:</strong> ${hrText}</p>
+              <p style="margin: 0 0 8px 0; color: #94A3B8; font-size: 13px;"><strong>Movement status:</strong> ${moveText}</p>
+              <p style="margin: 0 0 8px 0; color: #94A3B8; font-size: 13px;"><strong>Location:</strong> ${locationText}</p>
+              <p style="margin: 0; color: #94A3B8; font-size: 13px;"><strong>Map link:</strong> ${hasValidGps ? `<a href="${googleMapsUrl}" style="color: #38BDF8;">${googleMapsUrl}</a>` : 'Unavailable'}</p>
             </div>
 
-            <div style="text-align: center; margin: 26px 0;">
-              <a href="${trackingUrl}" target="_blank" style="background-color: #2563EB; color: #FFFFFF; padding: 14px 22px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block; margin-right: 10px;">
-                🛰️ Open SAFELYNK Control Room Radar
-              </a>
-              <a href="${googleMapsUrl}" target="_blank" style="background-color: #059669; color: #FFFFFF; padding: 14px 22px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block;">
-                📍 Open Google Maps Directions
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${trackingUrl}" target="_blank" style="background-color: #2563EB; color: #FFFFFF; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+                🛰️ Track Live Incident in SAFELYNK Control Room
               </a>
             </div>
 
-            <p style="font-size: 11px; color: #64748B; text-align: center; border-top: 1px solid #1E293B; padding-top: 18px; margin-top: 24px;">
-              Dispatched by SAFELYNK Control Room Command Center (nishchalr2006@gmail.com) · GTCR TECH NEXUS
+            <p style="font-size: 12px; color: #CBD5E1; text-align: center; font-weight: bold;">
+              Please follow your organization's emergency response procedure.
             </p>
           </div>
         `
@@ -462,12 +481,43 @@ app.post('/api/v1/notifications/send-wearer-confirmation', async (req: Request, 
   });
 });
 
-// GET ALL EMAIL NOTIFICATION AUDIT LOGS
-app.get('/api/v1/notifications/logs', (_req: Request, res: Response) => {
-  res.status(200).json({
-    success: true,
-    notificationAuditLogs
-  });
+// SERVER-SIDE GEMINI AI AI ASSISTANT ENDPOINT
+app.post('/api/gemini/explain-reading', async (req: Request, res: Response) => {
+  try {
+    const { heartRate, heartRateValid, motionMagnitude, movementEvent, sensorStatus } = req.body;
+
+    const prompt = `You are the SAFELYNK AI Assistant, a cautious, non-diagnostic wellness and telemetry assistant for a wearable safety system.
+Analyze the following sensor data:
+- Heart Rate estimate: ${heartRate ? `${heartRate} BPM` : 'Unavailable / Invalid'}
+- Sensor Signal Valid: ${heartRateValid ? 'Yes (optical PPG)' : 'No / Low Signal'}
+- Acceleration Magnitude: ${motionMagnitude ? `${motionMagnitude} G` : '1.0 G (nominal)'}
+- Movement Status: ${movementEvent || 'Normal'}
+- Sensor Flag: ${sensorStatus || 'nominal'}
+
+RULES (CRITICAL SAFETY CONSTRAINTS):
+1. Never diagnose any medical condition, disease, or medical emergency.
+2. Clearly state that the MAX30102 optical sensor estimates pulse; it DOES NOT measure blood pressure or medical vital signs.
+3. State that an elevated heart rate alone does NOT prove stress, danger, or a medical emergency—it can occur during physical exercise, excitement, or sensor motion artifacts.
+4. Emphasize that an AI explanation NEVER delays or cancels a manual SOS or safety check.
+5. If the reading is invalid or signal quality is low, advise making firm contact with the sensor.
+
+Provide a concise, 2-3 sentence non-diagnostic summary written in supportive, empathetic language.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: prompt
+    });
+
+    res.status(200).json({
+      success: true,
+      explanation: response.text || 'Sensor readings represent estimated telemetry. High heart rate alone is not a medical diagnosis or proof of danger.'
+    });
+  } catch (err: any) {
+    res.status(200).json({
+      success: true,
+      explanation: 'SAFELYNK AI Note: Sensor readings are non-diagnostic optical PPG estimates. Heart rate can fluctuate naturally during exercise or movement.'
+    });
+  }
 });
 
 // 4. CONTROL ROOM SYSTEM DIAGNOSTICS & STATUS ENDPOINT

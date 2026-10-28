@@ -578,6 +578,29 @@ class ApiService {
   public getNotificationLogs(): NotificationLog[] {
     return this.notificationLogs;
   }
+
+  public async explainReadingWithAI(reading: Partial<SensorReading>): Promise<string> {
+    try {
+      const resp = await fetch('/api/gemini/explain-reading', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          heartRate: reading.heartRate,
+          heartRateValid: reading.isValidReading ?? true,
+          motionMagnitude: reading.motionMagnitude,
+          movementEvent: reading.sensorStatus,
+          sensorStatus: reading.sensorStatus
+        })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        return data.explanation || 'MAX30102 PPG pulse estimates fluctuate naturally during activity.';
+      }
+    } catch {
+      // Fallback non-diagnostic explanation
+    }
+    return 'SAFELYNK AI Note: Sensor readings represent non-diagnostic optical estimates. Heart rate fluctuates naturally with physical exertion or motion.';
+  }
 }
 
 export const api = new ApiService();

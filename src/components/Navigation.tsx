@@ -10,6 +10,7 @@ interface NavigationProps {
   setActiveTab: (tab: 'home' | 'wearer' | 'trusted' | 'admin' | 'about') => void;
   onOpenAuth: () => void;
   onLogout: () => void;
+  onOpenDocs?: () => void;
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
@@ -18,7 +19,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   activeTab,
   setActiveTab,
   onOpenAuth,
-  onLogout
+  onLogout,
+  onOpenDocs
 }) => {
   const [isSirenPlaying, setIsSirenPlaying] = useState(false);
 
@@ -69,6 +71,14 @@ export const Navigation: React.FC<NavigationProps> = ({
             </div>
           </div>
           <div className="hidden lg:flex items-center gap-2 shrink-0 text-xs font-mono">
+            {onOpenDocs && (
+              <button
+                onClick={onOpenDocs}
+                className="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-cyan-300 font-mono text-xs font-bold hover:border-cyan-400 transition-colors"
+              >
+                ⚙️ ESP32 & Setup Docs
+              </button>
+            )}
             <button
               onClick={handleToggleSiren}
               className={`px-3 py-1 rounded-full border text-xs font-bold flex items-center gap-1.5 transition-all ${
