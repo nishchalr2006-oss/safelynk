@@ -89,7 +89,7 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
     }
   };
 
-  // Handle Hold-to-SOS Timer (2.5 seconds hold)
+  // Handle Screen Touch & Button Hold-to-SOS Timer (3.0 seconds hold)
   const handleSOSMouseDown = () => {
     if (activeSOS) return;
     audioService.playAlertBeep();
@@ -99,7 +99,7 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
     const startTime = Date.now();
     holdIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
-      const pct = Math.min(100, Math.floor((elapsed / 2500) * 100));
+      const pct = Math.min(100, Math.floor((elapsed / 3000) * 100));
       setHoldProgress(pct);
 
       if (pct >= 100) {
@@ -108,7 +108,7 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
         setHoldProgress(0);
         executeSOSTrigger();
       }
-    }, 50);
+    }, 40);
   };
 
   const handleSOSMouseUp = () => {
@@ -117,6 +117,21 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
     }
     setIsHoldingSOS(false);
     setHoldProgress(0);
+  };
+
+  const handleGlobalMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    if (activeSOS) return;
+    const target = e.target as HTMLElement;
+    if (
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.tagName === 'BUTTON' ||
+      target.closest('button') ||
+      target.closest('a')
+    ) {
+      return;
+    }
+    handleSOSMouseDown();
   };
 
   const executeSOSTrigger = async () => {
@@ -206,7 +221,13 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div 
+      onMouseDown={handleGlobalMouseDown}
+      onTouchStart={handleGlobalMouseDown}
+      onMouseUp={handleSOSMouseUp}
+      onTouchEnd={handleSOSMouseUp}
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 select-none"
+    >
       {/* 1. SAFETY STATUS HERO HEADER */}
       <div className={`p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden shadow-2xl ${
         activeSOS
@@ -383,7 +404,7 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
               <span>Emergency Action Control</span>
             </h3>
             <p className="text-xs text-slate-400 mt-1">
-              Press and hold the SOS button for 2.5 seconds to trigger instant panic alerts.
+              Press and hold anywhere on the screen or SOS button for <strong className="text-amber-400 font-bold">3 seconds</strong> to trigger instant emergency alerts.
             </p>
           </div>
 
@@ -468,7 +489,7 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
                 </div>
 
                 <p className="text-xs font-mono text-slate-400 mt-4 text-center">
-                  {isHoldingSOS ? `Holding... ${holdProgress}%` : 'Press & Hold for 2.5s'}
+                  {isHoldingSOS ? `Holding... ${holdProgress}%` : 'Press & Hold Screen / Button for 3.0s'}
                 </p>
               </div>
             )}
@@ -761,6 +782,61 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
               Note: The wearable vibration motor is triggered by ESP32 hardware upon receiving backend command.
             </p>
           </div>
+        </div>
+      )}
+
+      {/* 3-SECOND FULL SCREEN EMERGENCY TOUCH & PRESS OVERLAY */}
+      {isHoldingSOS && (
+        <div 
+          onMouseUp={handleSOSMouseUp}
+          onTouchEnd={handleSOSMouseUp}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-red-950/95 backdrop-blur-lg text-white p-6 animate-fade-in select-none"
+        >
+          <div className="relative flex items-center justify-center mb-6">
+            <svg className="w-44 h-44 -rotate-90">
+              <circle
+                cx="88"
+                cy="88"
+                r="76"
+                className="stroke-red-900"
+                strokeWidth="10"
+                fill="transparent"
+              />
+              <circle
+                cx="88"
+                cy="88"
+                r="76"
+                className="stroke-amber-400 transition-all duration-75"
+                strokeWidth="10"
+                fill="transparent"
+                strokeDasharray="477"
+                strokeDashoffset={477 - (477 * holdProgress) / 100}
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute w-28 h-28 rounded-full bg-red-600 text-white flex items-center justify-center shadow-2xl animate-pulse">
+              <ShieldAlert className="w-14 h-14" />
+            </div>
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl font-black tracking-wider uppercase text-red-100 text-center">
+            EMERGENCY SCREEN PRESS DETECTED
+          </h2>
+          <p className="text-xs sm:text-sm font-semibold text-red-200 mt-2 text-center max-w-md">
+            Holding screen for <strong className="text-amber-300 font-bold">3 SECONDS</strong> to dispatch instant SOS alarm & live GPS location to Control Room (`nishchalr2006@gmail.com`) & parents...
+          </p>
+
+          <div className="w-full max-w-md bg-slate-900/90 rounded-full h-4 mt-6 overflow-hidden border border-red-500/50">
+            <div 
+              className="bg-gradient-to-r from-amber-400 via-red-500 to-red-600 h-full transition-all duration-75"
+              style={{ width: `${holdProgress}%` }}
+            ></div>
+          </div>
+
+          <p className="font-mono text-3xl font-black mt-4 text-amber-300">{holdProgress}%</p>
+          <p className="text-xs text-slate-300 mt-4 font-mono bg-slate-900/80 px-4 py-1.5 rounded-full border border-slate-800">
+            🖐️ Release touch to cancel false alarm
+          </p>
         </div>
       )}
     </div>
