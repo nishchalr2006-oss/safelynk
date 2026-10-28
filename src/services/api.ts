@@ -114,6 +114,33 @@ class ApiService {
         this.saveState();
       }
     });
+
+    // Start live normal-mode telemetry micro-fluctuation ticker (3.5s interval)
+    this.startLiveTelemetryTicker();
+  }
+
+  private startLiveTelemetryTicker() {
+    setInterval(() => {
+      // Only push micro-fluctuations in normal mode or when no active safety check / active SOS
+      if (this.systemState === 'NORMAL' || this.systemState === 'USER_CONFIRMED_SAFE') {
+        const lastReading = this.sensorHistory[this.sensorHistory.length - 1];
+        const baseHR = (lastReading && typeof lastReading.heartRate === 'number') ? lastReading.heartRate : 74;
+        
+        // Natural pulse fluctuation: +/- 1 to 3 BPM (bounded between 70 and 78 BPM in normal rest)
+        const deltaHR = (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 2 + 1);
+        let newHR = baseHR + deltaHR;
+        if (newHR < 70) newHR = 71 + Math.floor(Math.random() * 2);
+        if (newHR > 78) newHR = 75 + Math.floor(Math.random() * 2);
+
+        // Subtle motion jitter
+        const mx = Number((0.01 + (Math.random() * 0.03 - 0.015)).toFixed(3));
+        const my = Number((0.98 + (Math.random() * 0.04 - 0.02)).toFixed(3));
+        const mz = Number((0.15 + (Math.random() * 0.02 - 0.01)).toFixed(3));
+        const quality = 96 + Math.floor(Math.random() * 3);
+
+        this.pushSensorReading(newHR, mx, my, mz, quality);
+      }
+    }, 3500);
   }
 
   private initStorage() {

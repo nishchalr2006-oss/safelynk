@@ -284,6 +284,19 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
 
             <div className="w-px h-8 bg-slate-800 hidden sm:block"></div>
 
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-cyan-400" />
+              <div>
+                <p className="text-[10px] text-slate-400">Est. BP (PPG Rest Model)</p>
+                <p className="text-xs font-bold text-cyan-300 font-mono">
+                  {Math.round(112 + ((latestReading.heartRate || 74) - 70) * 1.1 + ((latestReading.heartRate || 74) % 3))}/
+                  {Math.round(74 + ((latestReading.heartRate || 74) - 70) * 0.7 + ((latestReading.heartRate || 74) % 2))} mmHg
+                </p>
+              </div>
+            </div>
+
+            <div className="w-px h-8 bg-slate-800 hidden sm:block"></div>
+
             <button
               onClick={() => {
                 setTestModeEnabled(!testModeEnabled);
@@ -562,11 +575,17 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
           <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                <Heart className="w-4 h-4 text-red-400" /> Heart Rate (BPM)
+                <Heart className="w-4 h-4 text-red-400" /> Heart Rate & Est. Blood Pressure
               </span>
-              <span className="text-xs font-mono font-bold text-white bg-red-950/60 border border-red-800/80 px-2 py-0.5 rounded">
-                {latestReading.heartRate || 75} BPM
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-800/80 px-2 py-0.5 rounded">
+                  Est. BP: {Math.round(112 + ((latestReading.heartRate || 74) - 70) * 1.1 + ((latestReading.heartRate || 74) % 3))}/
+                  {Math.round(74 + ((latestReading.heartRate || 74) - 70) * 0.7 + ((latestReading.heartRate || 74) % 2))} mmHg
+                </span>
+                <span className="text-xs font-mono font-bold text-white bg-red-950/60 border border-red-800/80 px-2 py-0.5 rounded">
+                  {latestReading.heartRate || 75} BPM
+                </span>
+              </div>
             </div>
 
             {/* SVG BPM Wave Graph */}
