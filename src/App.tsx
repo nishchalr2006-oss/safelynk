@@ -25,6 +25,25 @@ export default function App() {
     return unsub;
   }, []);
 
+  // Check URL params for Wearer Email Confirmation links (?confirmSafe=true / ?escalateSOS=true / ?sosId=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('confirmSafe') === 'true') {
+      api.resolveSafetyCheck(true);
+      setActiveTab('wearer');
+      addToast('success', 'Wearer Confirmed Safe!', 'High pulse attributed to physical exercise. Emergency alert cancelled successfully.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get('escalateSOS') === 'true') {
+      api.resolveSafetyCheck(false);
+      setActiveTab('wearer');
+      addToast('error', 'Emergency SOS Escalated!', 'Explicit help requested from email link. Dispatched alerts to Control Room & Parents.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get('sosId')) {
+      setActiveTab('admin');
+      addToast('info', 'Control Room Tracking Active', `Monitoring incident ID: ${params.get('sosId')}`);
+    }
+  }, []);
+
   const addToast = (
     type: 'success' | 'error' | 'warning' | 'info',
     title: string,

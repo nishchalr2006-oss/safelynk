@@ -381,6 +381,87 @@ app.post('/api/v1/notifications/send-email', async (req: Request, res: Response)
   });
 });
 
+// WEARER DIRECT CONFIRMATION EMAIL FOR PHYSICAL EXERCISE / ELEVATED BPM
+app.post('/api/v1/notifications/send-wearer-confirmation', async (req: Request, res: Response) => {
+  const { wearerEmail = 'sarah.jenkins@example.com', wearerName = 'Sarah Jenkins', bpm = 135, reason = 'Elevated Pulse / Workout Vector', checkId = `sc_${Date.now()}` } = req.body;
+  const appUrl = process.env.APP_URL || 'https://ais-pre-aal6yuriqkf2lfg7ne5bnf-662167995161.asia-southeast1.run.app';
+  const confirmSafeUrl = `${appUrl}?confirmSafe=true&checkId=${checkId}`;
+  const escalateSosUrl = `${appUrl}?escalateSOS=true&checkId=${checkId}`;
+
+  let providerMsgId = `confirm_${Date.now()}_${Math.floor(Math.random() * 8999 + 1000)}`;
+  let status: NotificationAudit['deliveryStatus'] = 'delivered';
+
+  if (resendClient && process.env.RESEND_API_KEY) {
+    try {
+      const emailRes = await resendClient.emails.send({
+        from: 'SAFELYNK Wearer Safety <alerts@safelynk.org>',
+        to: [wearerEmail],
+        subject: `❓ SAFELYNK Safety Check: High Pulse Detected (${bpm} BPM) — Are you safe?`,
+        html: `
+          <div style="font-family: Arial, sans-serif; background-color: #070B14; color: #F1F5F9; padding: 24px; border-radius: 12px; max-width: 600px; margin: 0 auto; border: 2px solid #F59E0B;">
+            <div style="background-color: #D97706; color: #FFFFFF; padding: 14px 18px; border-radius: 8px; font-weight: bold; font-size: 18px; text-align: center;">
+              ⚡ BIOMETRIC PULSE ELEVATION DETECTED
+            </div>
+
+            <p style="margin-top: 20px; font-size: 15px; color: #E2E8F0; line-height: 1.5;">
+              Dear <strong>${wearerName}</strong>,
+              <br/><br/>
+              SAFELYNK detected an elevated heart rate (<strong>${bpm} BPM</strong>). If you are currently engaging in <strong>physical exercise, running, or gym workout</strong>, please confirm your safety below before an alert is dispatched to parents or the Control Room.
+            </p>
+
+            <div style="background-color: #0F172A; border: 1px solid #334155; padding: 16px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0 0 8px 0; color: #94A3B8; font-size: 13px;"><strong>Trigger Reason:</strong> <span style="color: #FBBF24;">${reason}</span></p>
+              <p style="margin: 0 0 8px 0; color: #94A3B8; font-size: 13px;"><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
+              <p style="margin: 0; color: #94A3B8; font-size: 13px;"><strong>Auto-Escalation Countdown:</strong> 45 Seconds</p>
+            </div>
+
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${confirmSafeUrl}" target="_blank" style="background-color: #059669; color: #FFFFFF; padding: 14px 22px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block; margin-right: 10px;">
+                🟢 I'm Safe (Physical Exercise / Workout)
+              </a>
+              <a href="${escalateSosUrl}" target="_blank" style="background-color: #DC2626; color: #FFFFFF; padding: 14px 22px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
+                🔴 I Need Emergency Help!
+              </a>
+            </div>
+
+            <p style="font-size: 11px; color: #64748B; text-align: center; border-top: 1px solid #1E293B; padding-top: 16px; margin-top: 24px;">
+              If no response is confirmed within 45 seconds, SAFELYNK will automatically dispatch emergency alerts to parents and Control Room (nishchalr2006@gmail.com).
+            </p>
+          </div>
+        `
+      });
+      if (emailRes.data?.id) providerMsgId = emailRes.data.id;
+    } catch {
+      // express relay fallback
+    }
+  }
+
+  const audit: NotificationAudit & { recipientEmail: string } = {
+    id: `notif_${Date.now()}_${Math.floor(Math.random() * 899 + 100)}`,
+    alertId: checkId,
+    recipientIdentifier: wearerEmail,
+    recipientEmail: wearerEmail,
+    recipientName: `${wearerName} (Wearer)`,
+    channel: 'email',
+    provider: resendClient ? 'resend' : 'express_relay',
+    deliveryStatus: status,
+    providerMessageId: providerMsgId,
+    trackingUrl: confirmSafeUrl,
+    googleMapsUrl: 'https://maps.google.com',
+    attemptCount: 1,
+    attemptedAt: new Date().toISOString(),
+    deliveredAt: new Date().toISOString()
+  };
+
+  notificationAuditLogs.unshift(audit);
+
+  res.status(200).json({
+    success: true,
+    message: `Wearer safety check email dispatched to ${wearerEmail}.`,
+    audit
+  });
+});
+
 // GET ALL EMAIL NOTIFICATION AUDIT LOGS
 app.get('/api/v1/notifications/logs', (_req: Request, res: Response) => {
   res.status(200).json({

@@ -257,7 +257,7 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
         </div>
       </div>
 
-      {/* 2. PENDING SAFETY CHECK ALERT BANNER */}
+      {/* 2. PENDING SAFETY CHECK ALERT BANNER (PHASE 1: WEARER VERIFICATION BEFORE PARENT/CONTROL ROOM DISPATCH) */}
       {safetyCheck && (
         <div className="bg-gradient-to-r from-amber-950/90 via-amber-900/80 to-slate-900 border-2 border-amber-600 rounded-3xl p-6 shadow-2xl space-y-4 animate-fade-in">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -266,9 +266,20 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Are you safe right now?</h3>
-                <p className="text-xs text-amber-200 mt-0.5">
-                  Trigger: {safetyCheck.triggerReason}. Auto-escalating to SOS in{' '}
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono text-amber-300 font-extrabold uppercase bg-amber-950 px-2 py-0.5 rounded border border-amber-700">
+                    PHASE 1: WEARER SAFETY VERIFICATION
+                  </span>
+                  <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
+                    CONFIRMATION EMAIL SENT
+                  </span>
+                </div>
+                <h3 className="text-lg font-black text-white mt-1">High Pulse / Workout Spike Detected — Are you safe?</h3>
+                <p className="text-xs text-amber-200/90 mt-0.5">
+                  Trigger: <strong>{safetyCheck.triggerReason}</strong>. A verification email was sent to your inbox. Confirming safe (e.g., physical exercise/gym) prevents false alerts to parents and Control Room.
+                </p>
+                <p className="text-[11px] text-slate-300 font-mono mt-1">
+                  Auto-escalation to Critical Emergency SOS in:{' '}
                   <span className="font-mono font-bold text-white text-sm bg-amber-950 px-2 py-0.5 rounded border border-amber-700">
                     {safetyCheckCountdown}s
                   </span>
@@ -276,24 +287,25 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
               </div>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
               <button
                 onClick={() => {
                   api.resolveSafetyCheck(true);
-                  onShowToast('success', 'Confirmed Safe', 'Safety check cleared successfully.');
+                  onShowToast('success', 'Confirmed Safe (Physical Exercise)', 'Safety check cleared. Emergency alerts to parents and control room suppressed.');
                 }}
-                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg transition-colors"
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-1.5"
               >
-                I'm Safe
+                <span>🟢 I'm Safe (Physical Exercise)</span>
               </button>
 
               <button
                 onClick={() => {
                   api.resolveSafetyCheck(false);
+                  onShowToast('error', 'Emergency SOS Escalated!', 'Parent and Control Room alerted immediately!');
                 }}
-                className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow-lg transition-colors"
+                className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-1.5"
               >
-                I Need Help
+                <span>🔴 I Need Help (Escalate SOS)</span>
               </button>
             </div>
           </div>
@@ -491,11 +503,11 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
             <button
               onClick={() => {
                 api.pushSensorReading(142, 0.05, 0.98, 0.12); // High HR
-                onShowToast('warning', 'Simulated Pulse Spike', 'High BPM injected to trigger Safety Check');
+                onShowToast('warning', 'Physical Exercise Spike Injected (142 BPM)', 'Dispatched direct Wearer Confirmation Email before alerting parents & Control Room.');
               }}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+              className="px-3 py-1.5 rounded-xl bg-amber-950 border border-amber-800 text-amber-300 text-xs font-bold transition-all hover:bg-amber-900"
             >
-              Simulate High Pulse
+              ⚡ Simulate Exercise Spike (142 BPM)
             </button>
           </div>
         </div>

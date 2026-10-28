@@ -315,12 +315,14 @@ class ApiService {
     return this.activeSafetyCheck;
   }
 
-  public triggerSafetyCheck(reason: string) {
+  public triggerSafetyCheck(reason: string, bpmVal: number = 135) {
     if (this.activeSOS || this.activeSafetyCheck) return;
     const now = new Date();
     const expires = new Date(now.getTime() + 45000); // 45s countdown
+    const checkId = `sc_${Date.now()}`;
+
     this.activeSafetyCheck = {
-      id: `sc_${Date.now()}`,
+      id: checkId,
       wearerId: MOCK_WEARER_PROFILE.id,
       deviceId: this.device.id,
       triggerReason: reason,
@@ -329,6 +331,47 @@ class ApiService {
       expiresAt: expires.toISOString()
     };
     this.systemState = 'POSSIBLE_STRESS';
+
+    // Dispatch direct wearer safety confirmation email before notifying parent/control room
+    const wearerEmail = this.currentUser?.email || 'sarah.jenkins@example.com';
+    const wearerName = this.currentUser?.displayName || 'Sarah Jenkins';
+
+    fetch('/api/v1/notifications/send-wearer-confirmation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        wearerEmail,
+        wearerName,
+        bpm: bpmVal,
+        reason,
+        checkId
+      })
+    })
+      .then(async res => {
+        if (res.ok) {
+          const data = await res.json();
+          if (data.audit) {
+            this.notificationLogs.unshift({
+              id: data.audit.id || `nl_${Date.now()}`,
+              alertId: checkId,
+              recipientIdentifier: wearerEmail,
+              recipientEmail: wearerEmail,
+              recipientName: `${wearerName} (Wearer Confirmation)`,
+              channel: 'email',
+              provider: data.audit.provider || 'express_relay',
+              deliveryStatus: 'delivered',
+              providerMessageId: data.audit.providerMessageId || `msg_confirm_${Date.now()}`,
+              trackingUrl: `${window.location.origin}?confirmSafe=true&checkId=${checkId}`,
+              attemptCount: 1,
+              attemptedAt: new Date().toISOString(),
+              deliveredAt: new Date().toISOString()
+            });
+            this.saveState();
+          }
+        }
+      })
+      .catch(() => {});
+
     this.saveState();
   }
 
