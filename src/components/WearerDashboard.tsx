@@ -201,13 +201,18 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Wearer Safety Hub</h2>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white flex flex-wrap items-center gap-3">
+              <span>Wearer Safety Hub</span>
+              <span className="text-xs font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-700/80 px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                Your Safety, Our Priority
+              </span>
+            </h2>
             <p className="text-xs text-slate-300">
               {activeSOS
-                ? 'Emergency alert is active. Trusted contacts have been notified with your live GPS location.'
+                ? 'Your Safety, Our Priority — Emergency alert is active. Trusted contacts have been notified with live GPS location.'
                 : safetyCheck
-                ? 'System detected elevated heart rate or motion anomaly. Please confirm your safety below.'
-                : 'Real-time ESP32 biometric pulse and accelerometer telemetry monitoring.'}
+                ? 'Your Safety, Our Priority — Elevated heart rate or motion anomaly detected. Please confirm your safety.'
+                : 'Your Safety, Our Priority — Real-time ESP32 biometric pulse and accelerometer telemetry monitoring.'}
             </p>
           </div>
 

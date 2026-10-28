@@ -201,11 +201,16 @@ export const TrustedContactDashboard: React.FC<TrustedContactDashboardProps> = (
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider bg-emerald-950/80 border border-emerald-800 px-2 py-0.5 rounded">
-                MONITORING ACTIVE
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider bg-emerald-950/80 border border-emerald-800 px-2 py-0.5 rounded font-bold">
+                  MONITORING ACTIVE
+                </span>
+                <span className="text-[10px] font-mono text-cyan-300 font-bold bg-cyan-950/80 border border-cyan-800 px-2 py-0.5 rounded">
+                  Your Safety, Our Priority
+                </span>
+              </div>
               <h2 className="text-xl font-extrabold text-white mt-1">Wearers Protected & Nominal</h2>
-              <p className="text-xs text-slate-400">All connected wearer devices are online with no active SOS alerts.</p>
+              <p className="text-xs text-slate-400">Your Safety, Our Priority — All connected wearer devices are online with no active SOS alerts.</p>
             </div>
           </div>
 

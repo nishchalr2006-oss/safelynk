@@ -32,20 +32,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="absolute top-1/2 right-10 w-72 h-72 bg-violet-600/15 blur-[100px] rounded-full pointer-events-none"></div>
 
         <div className="text-center max-w-3xl mx-auto space-y-6 relative z-10">
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-slate-900/90 border border-cyan-500/50 text-xs font-semibold text-cyan-300 backdrop-blur-md shadow-xl">
+          <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-900/90 border border-cyan-500/50 text-xs font-bold text-cyan-300 backdrop-blur-md shadow-xl animate-float-slow">
             <img src="/logo.jpeg" alt="GTCR Logo" className="h-6 w-auto object-contain rounded" />
             <span>GARUDA TANDAV CYBER RAKSHA · GTCR TECH NEXUS</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-white leading-[1.1] text-balance">
-            Your Safety. Connected.{' '}
-            <span className="bg-gradient-to-r from-cyan-400 via-indigo-300 to-violet-300 bg-clip-text text-transparent">
-              Always.
+          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-[1.05] text-balance">
+            <span className="bg-gradient-to-r from-white via-cyan-100 to-indigo-200 bg-clip-text text-transparent animate-text-shimmer drop-shadow-[0_0_35px_rgba(34,211,238,0.4)]">
+              Your Safety,
+            </span>{' '}
+            <br className="hidden sm:inline" />
+            <span className="bg-gradient-to-r from-cyan-400 via-emerald-300 to-teal-200 bg-clip-text text-transparent drop-shadow-[0_0_40px_rgba(52,211,153,0.5)]">
+              Our Priority.
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl mx-auto">
-            SAFELYNK unites physical ESP32 wearable hardware, predictive motion and pulse biometric sensors, instant GPS geolocation, and real-time trusted-contact alert networks into one unified protection system.
+          <p className="text-base sm:text-xl text-slate-300 font-medium leading-relaxed max-w-2xl mx-auto pt-2">
+            SAFELYNK unites physical ESP32 wearable hardware, predictive motion and pulse biometric sensors, instant real-time GPS geolocation, and direct emergency alerts into one unified protection system.
           </p>
 
           <div className="pt-4 flex flex-wrap items-center justify-center gap-4">

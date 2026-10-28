@@ -171,13 +171,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onShowToast }) =
                 <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950 border border-cyan-800 px-2 py-0.5 rounded font-extrabold uppercase tracking-wider">
                   CONTROL ROOM COMMAND CENTER
                 </span>
+                <span className="text-[10px] font-mono text-cyan-300 font-bold bg-indigo-950 border border-indigo-700 px-2 py-0.5 rounded">
+                  Your Safety, Our Priority
+                </span>
                 <span className="text-xs font-mono text-emerald-400 flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   OPERATIONAL
                 </span>
               </div>
               <h2 className="text-2xl font-black text-white mt-1">GTCR Central Monitoring Console</h2>
-              <p className="text-xs text-slate-300">Authorized Control Room Operator Dispatch & Hardware Telemetry Control</p>
+              <p className="text-xs text-slate-300">Your Safety, Our Priority — Authorized Control Room Operator Dispatch & Hardware Telemetry Control</p>
             </div>
           </div>
 

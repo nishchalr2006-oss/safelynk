@@ -21,90 +21,145 @@ export const Navigation: React.FC<NavigationProps> = ({
 }) => {
   return (
     <>
+      {/* 0. TOP ANIMATED TICKER BANNER: YOUR SAFETY. CONNECTED. ALWAYS. */}
+      <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 border-b border-cyan-500/40 py-2.5 px-4 overflow-hidden relative z-40 shadow-md">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 text-xs font-mono">
+          <div className="flex items-center gap-3 overflow-hidden min-w-0">
+            <span className="flex h-3 w-3 relative shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span>
+            </span>
+            <div className="overflow-hidden w-full">
+              <div className="animate-marquee whitespace-nowrap flex items-center gap-8 text-xs font-bold">
+                <span className="text-cyan-300 font-black tracking-widest uppercase flex items-center gap-2 drop-shadow-[0_0_12px_rgba(6,182,212,0.9)] bg-cyan-950/60 border border-cyan-500/40 px-3 py-1 rounded-full">
+                  <ShieldAlert className="w-4 h-4 text-cyan-300 animate-pulse inline" />
+                  YOUR SAFETY. CONNECTED. ALWAYS.
+                </span>
+                <span className="text-cyan-500/60">✦</span>
+                <span className="text-slate-200 font-extrabold tracking-wide">
+                  GARUDA TANDAV CYBER RAKSHA · GTCR TECH NEXUS
+                </span>
+                <span className="text-cyan-500/60">✦</span>
+                <span className="text-cyan-300 font-black tracking-widest uppercase flex items-center gap-2 drop-shadow-[0_0_12px_rgba(6,182,212,0.9)] bg-cyan-950/60 border border-cyan-500/40 px-3 py-1 rounded-full">
+                  <ShieldAlert className="w-4 h-4 text-cyan-300 animate-pulse inline" />
+                  YOUR SAFETY. CONNECTED. ALWAYS.
+                </span>
+                <span className="text-cyan-500/60">✦</span>
+                <span className="text-indigo-300 font-bold">
+                  24/7 DUAL-LAYER EMERGENCY ALERTING & GPS GEOLOCATION
+                </span>
+                <span className="text-cyan-500/60">✦</span>
+              </div>
+            </div>
+          </div>
+          <div className="hidden lg:flex items-center gap-2 shrink-0 text-xs font-mono">
+            <span className="px-3 py-1 rounded-full bg-cyan-950 border border-cyan-500/60 text-cyan-300 font-black uppercase tracking-widest shadow-[0_0_10px_rgba(6,182,212,0.3)]">
+              STATUS: NOMINAL
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* 1. EMERGENCY ALARM TOP BANNER (Visible if SOS active) */}
       {activeSOS && (
-        <div className="bg-red-600 text-white px-4 py-2 text-xs font-bold flex items-center justify-between gap-3 animate-pulse shadow-lg z-50 sticky top-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <ShieldAlert className="w-4 h-4 shrink-0" />
-            <span className="truncate">
+        <div className="bg-red-600 text-white px-5 py-2.5 text-sm font-black flex items-center justify-between gap-3 animate-pulse shadow-2xl z-50 sticky top-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <ShieldAlert className="w-5 h-5 shrink-0 animate-bounce" />
+            <span className="truncate tracking-wide">
               EMERGENCY SOS ACTIVE: {activeSOS.wearerName || 'Sarah'} triggered alert ({activeSOS.triggerSource.toUpperCase().replace('_', ' ')})
             </span>
           </div>
           <button
             onClick={() => setActiveTab(currentUser?.role === 'trusted_contact' ? 'trusted' : 'wearer')}
-            className="px-2.5 py-1 bg-white text-red-700 font-extrabold rounded text-[11px] hover:bg-slate-100 transition-colors shrink-0"
+            className="px-3.5 py-1.5 bg-white text-red-700 font-extrabold rounded-lg text-xs hover:bg-slate-100 transition-colors shrink-0 shadow-md"
           >
             VIEW INCIDENT
           </button>
         </div>
       )}
 
-      {/* 2. DESKTOP / MAIN HEADER */}
-      <header className="border-b border-slate-800/80 bg-[#070B14]/95 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-6">
+      {/* 2. DESKTOP / MAIN HEADER (Enhanced height & bold attractive styling) */}
+      <header className="border-b border-indigo-900/50 bg-[#070B14]/95 backdrop-blur-xl sticky top-0 z-40 shadow-2xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
           {/* Brand Zone: SAFELYNK Wordmark + Team Logo.jpeg */}
           <div
             onClick={() => setActiveTab('home')}
-            className="flex items-center gap-3 cursor-pointer shrink-0 group"
+            className="flex items-center gap-3.5 cursor-pointer shrink-0 group"
           >
             {/* Team Logo (Strictly original logo.jpeg with object-contain) */}
-            <img
-              src="/logo.jpeg"
-              alt="GTCR TECH NEXUS Team Logo"
-              className="h-9 w-auto object-contain rounded-lg border border-indigo-500/30 group-hover:scale-105 transition-transform"
-            />
+            <div className="p-1 rounded-xl bg-slate-900 border border-cyan-500/40 group-hover:border-cyan-400 group-hover:shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all shadow-md">
+              <img
+                src="/logo.jpeg"
+                alt="GTCR TECH NEXUS Team Logo"
+                className="h-10 sm:h-11 w-auto object-contain rounded-lg group-hover:scale-105 transition-transform"
+              />
+            </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-lg font-black tracking-tight text-white font-sans">SAFELYNK</span>
-                <span className="hidden sm:inline-block text-[9px] font-mono text-cyan-400 bg-cyan-950/80 border border-cyan-800/60 px-1.5 py-0.2 rounded">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-cyan-300 bg-clip-text text-transparent font-sans">
+                  SAFELYNK
+                </span>
+                <span className="hidden sm:inline-block text-[10px] font-mono font-black text-cyan-300 bg-cyan-950/90 border border-cyan-700/80 px-2 py-0.5 rounded-md shadow-sm">
                   GTCR TECH NEXUS
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-slate-400 block -mt-0.5">GARUDA TANDAV CYBER RAKSHA</span>
+              <span className="text-[11px] font-mono text-slate-400 font-semibold block -mt-0.5 tracking-wide">
+                GARUDA TANDAV CYBER RAKSHA
+              </span>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-5 text-sm font-medium text-slate-300">
+          <nav className="hidden md:flex items-center gap-2 text-sm font-bold text-slate-300">
             <button
               onClick={() => setActiveTab('home')}
-              className={`hover:text-white transition-colors whitespace-nowrap shrink-0 ${
-                activeTab === 'home' ? 'text-cyan-400 font-bold border-b-2 border-cyan-400 pb-0.5' : ''
+              className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap shrink-0 ${
+                activeTab === 'home'
+                  ? 'bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.3)] font-black'
+                  : 'hover:text-white hover:bg-slate-900/80'
               }`}
             >
               Overview
             </button>
             <button
               onClick={() => setActiveTab('wearer')}
-              className={`hover:text-white transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
-                activeTab === 'wearer' ? 'text-cyan-400 font-bold border-b-2 border-cyan-400 pb-0.5' : ''
+              className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap shrink-0 flex items-center gap-2 ${
+                activeTab === 'wearer'
+                  ? 'bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.3)] font-black'
+                  : 'hover:text-white hover:bg-slate-900/80'
               }`}
             >
-              <Activity className="w-4 h-4" />
+              <Activity className="w-4 h-4 text-cyan-400" />
               <span>Wearer Dashboard</span>
             </button>
             <button
               onClick={() => setActiveTab('trusted')}
-              className={`hover:text-white transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
-                activeTab === 'trusted' ? 'text-cyan-400 font-bold border-b-2 border-cyan-400 pb-0.5' : ''
+              className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap shrink-0 flex items-center gap-2 ${
+                activeTab === 'trusted'
+                  ? 'bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.3)] font-black'
+                  : 'hover:text-white hover:bg-slate-900/80'
               }`}
             >
-              <Users className="w-4 h-4" />
+              <Users className="w-4 h-4 text-indigo-400" />
               <span>Parent Dashboard</span>
             </button>
             <button
               onClick={() => setActiveTab('admin')}
-              className={`hover:text-white transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
-                activeTab === 'admin' ? 'text-cyan-400 font-bold border-b-2 border-cyan-400 pb-0.5' : ''
+              className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap shrink-0 flex items-center gap-2 ${
+                activeTab === 'admin'
+                  ? 'bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.3)] font-black'
+                  : 'hover:text-white hover:bg-slate-900/80'
               }`}
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-4 h-4 text-violet-400" />
               <span>System Admin</span>
             </button>
             <button
               onClick={() => setActiveTab('about')}
-              className={`hover:text-white transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
-                activeTab === 'about' ? 'text-cyan-400 font-bold border-b-2 border-cyan-400 pb-0.5' : ''
+              className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap shrink-0 flex items-center gap-2 ${
+                activeTab === 'about'
+                  ? 'bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(6,182,212,0.3)] font-black'
+                  : 'hover:text-white hover:bg-slate-900/80'
               }`}
             >
               <Award className="w-4 h-4 text-amber-400" />
