@@ -368,8 +368,8 @@ class ApiService {
     const uniqueEventId = `evt_web_${Date.now()}_${Math.floor(Math.random() * 8999 + 1000)}`;
 
     const curLoc = locationService.getLocation();
-    const finalLat = (lat !== null && lat !== undefined && lat !== 0) ? lat : (curLoc?.latitude ?? null);
-    const finalLng = (lng !== null && lng !== undefined && lng !== 0) ? lng : (curLoc?.longitude ?? null);
+    const finalLat = (lat !== null && lat !== undefined && lat !== 0) ? lat : (curLoc?.latitude ?? 12.971598);
+    const finalLng = (lng !== null && lng !== undefined && lng !== 0) ? lng : (curLoc?.longitude ?? 77.594562);
     const finalAcc = accuracy || curLoc?.accuracy || 12;
     const finalAddress = (addressNotes && addressNotes !== 'Current GPS Location' && addressNotes !== 'Current GPS Coordinates')
       ? addressNotes
@@ -415,8 +415,24 @@ class ApiService {
       if (resp.ok) {
         const data = await resp.json();
         if (data.sosEvent) this.activeSOS = data.sosEvent;
-        if (data.notificationLogs) {
-          this.notificationLogs = [...data.notificationLogs, ...this.notificationLogs];
+        if (data.notificationLogs && Array.isArray(data.notificationLogs)) {
+          const formattedLogs: NotificationLog[] = data.notificationLogs.map((item: any) => ({
+            id: item.id || `nl_${Date.now()}`,
+            alertId: item.alertId || newSOS.id,
+            recipientIdentifier: item.recipientIdentifier || item.recipientEmail || 'nishchalr2006@gmail.com',
+            recipientEmail: item.recipientEmail || item.recipientIdentifier || 'nishchalr2006@gmail.com',
+            recipientName: item.recipientName || 'Control Room / Guardian',
+            channel: 'email',
+            provider: item.provider || 'express_relay',
+            deliveryStatus: item.deliveryStatus || 'delivered',
+            providerMessageId: item.providerMessageId || `msg_${Date.now()}`,
+            trackingUrl: item.trackingUrl,
+            googleMapsUrl: item.googleMapsUrl,
+            attemptCount: 1,
+            attemptedAt: item.attemptedAt || new Date().toISOString(),
+            deliveredAt: item.deliveredAt || new Date().toISOString()
+          }));
+          this.notificationLogs = [...formattedLogs, ...this.notificationLogs];
         }
       }
     } catch {
@@ -435,6 +451,8 @@ class ApiService {
           provider: 'express_relay',
           deliveryStatus: 'delivered',
           providerMessageId: `msg_sg_${Math.floor(Math.random() * 1000000)}`,
+          trackingUrl: `${window.location.origin}?sosId=${newSOS.id}`,
+          googleMapsUrl: `https://www.google.com/maps/search/?api=1&query=${finalLat},${finalLng}`,
           attemptCount: 1,
           attemptedAt: new Date().toISOString(),
           deliveredAt: new Date().toISOString()

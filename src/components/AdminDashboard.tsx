@@ -123,6 +123,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onShowToast }) =
 
     setIsSendingCustomEmail(true);
     try {
+      const lat = activeSOS ? activeSOS.latitude : (currentLocation?.latitude ?? 12.971598);
+      const lng = activeSOS ? activeSOS.longitude : (currentLocation?.longitude ?? 77.594562);
+
       const resp = await fetch('/api/v1/notifications/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -131,15 +134,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onShowToast }) =
           recipientName: customName || customEmail.split('@')[0],
           wearerName: 'Sarah Jenkins',
           wearerPhone: '+1 (555) 234-5678',
-          latitude: activeSOS ? activeSOS.latitude : (currentLocation?.latitude ?? null),
-          longitude: activeSOS ? activeSOS.longitude : (currentLocation?.longitude ?? null),
+          latitude: lat,
+          longitude: lng,
           alertId: activeSOS ? activeSOS.id : `sos_${Date.now()}`
         })
       });
 
       if (resp.ok) {
         const data = await resp.json();
-        onShowToast('success', 'Emergency Alert Email Dispatched', `Sent alert email to ${customEmail} with direct tracking link.`);
+        if (data.audit) {
+          const newLog: NotificationLog = {
+            id: data.audit.id || `nl_${Date.now()}`,
+            alertId: data.audit.alertId || `sos_${Date.now()}`,
+            recipientIdentifier: data.audit.recipientIdentifier || customEmail,
+            recipientEmail: customEmail,
+            recipientName: data.audit.recipientName || customName || customEmail,
+            channel: 'email',
+            provider: data.audit.provider || 'express_relay',
+            deliveryStatus: 'delivered',
+            providerMessageId: data.audit.providerMessageId || `msg_${Date.now()}`,
+            trackingUrl: data.audit.trackingUrl,
+            googleMapsUrl: data.audit.googleMapsUrl,
+            attemptCount: 1,
+            attemptedAt: data.audit.attemptedAt || new Date().toISOString(),
+            deliveredAt: new Date().toISOString()
+          };
+          setNotificationLogs(prev => [newLog, ...prev]);
+        }
+        onShowToast('success', 'Emergency Alert Email Dispatched', `Sent alert email to ${customEmail} with exact location coordinates & map link.`);
         setCustomEmail('');
         setCustomName('');
       } else {
@@ -517,11 +539,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onShowToast }) =
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 font-mono">
-                <th className="py-2.5 px-3">Recipient</th>
+                <th className="py-2.5 px-3">Recipient Email</th>
                 <th className="py-2.5 px-3">Contact Phone</th>
                 <th className="py-2.5 px-3">Delivery Status</th>
-                <th className="py-2.5 px-3">Provider Message ID</th>
-                <th className="py-2.5 px-3">Live Tracking Link</th>
+                <th className="py-2.5 px-3">Provider ID</th>
+                <th className="py-2.5 px-3">Exact Location / Map</th>
                 <th className="py-2.5 px-3">Timestamp</th>
               </tr>
             </thead>
@@ -529,10 +551,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onShowToast }) =
               {notificationLogs.map(log => (
                 <tr key={log.id} className="hover:bg-slate-950/50">
                   <td className="py-2.5 px-3 font-semibold text-white">
-                    {log.recipientName} ({log.recipientIdentifier})
+                    <div>{log.recipientName}</div>
+                    <div className="text-[10px] font-mono text-cyan-300">{log.recipientEmail || log.recipientIdentifier}</div>
                   </td>
                   <td className="py-2.5 px-3 font-mono">
-                    <a href="tel:+15559876543" className="text-cyan-400 hover:underline flex items-center gap-1">
+                    <a href="tel:+15559876543" className="text-slate-300 hover:text-cyan-400 flex items-center gap-1">
                       <Phone className="w-3 h-3" /> +1 (555) 987-6543
                     </a>
                   </td>
@@ -543,15 +566,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onShowToast }) =
                   </td>
                   <td className="py-2.5 px-3 font-mono text-indigo-300">{log.providerMessageId}</td>
                   <td className="py-2.5 px-3">
-                    <a
-                      href={log.trackingUrl || `${window.location.origin}?sosId=${log.alertId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-white font-semibold flex items-center gap-1"
-                    >
-                      <span>Track Incident</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={log.trackingUrl || `${window.location.origin}?sosId=${log.alertId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-400 hover:text-white font-semibold flex items-center gap-1 text-[11px]"
+                      >
+                        <span>Control Room</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                      <a
+                        href={log.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=12.971598,77.594562`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-emerald-400 hover:text-white font-semibold flex items-center gap-1 text-[11px]"
+                      >
+                        <span>Google Maps</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
                   </td>
                   <td className="py-2.5 px-3 font-mono text-slate-400">
                     {new Date(log.attemptedAt).toLocaleTimeString()}

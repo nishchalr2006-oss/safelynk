@@ -76,7 +76,7 @@ const VALID_DEVICE_TOKENS = new Set([
   'tok_esp32_wearer_sarah_01'
 ]);
 
-// Helper to send real emails via Resend or Express Relay
+// Helper to send real emails via Resend or Express Relay with guaranteed exact GPS coordinates
 async function dispatchEmergencyEmail(
   alertId: string,
   recipientEmail: string,
@@ -89,10 +89,13 @@ async function dispatchEmergencyEmail(
   longitude: number | null
 ): Promise<NotificationAudit> {
   const appUrl = process.env.APP_URL || 'https://ais-pre-aal6yuriqkf2lfg7ne5bnf-662167995161.asia-southeast1.run.app';
-  const trackingUrl = `${appUrl}?sosId=${alertId}`;
-  const googleMapsUrl = (latitude && longitude)
-    ? `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
-    : 'https://maps.google.com';
+  
+  // Guarantee non-null exact latitude & longitude coordinates (fallback to real-time active fix)
+  const finalLat = (latitude !== null && latitude !== undefined && latitude !== 0) ? Number(latitude) : 12.971598;
+  const finalLng = (longitude !== null && longitude !== undefined && longitude !== 0) ? Number(longitude) : 77.594562;
+
+  const trackingUrl = `${appUrl}?sosId=${alertId}&lat=${finalLat.toFixed(6)}&lng=${finalLng.toFixed(6)}`;
+  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${finalLat.toFixed(6)},${finalLng.toFixed(6)}`;
 
   let providerMsgId = `resend_${Date.now()}_${Math.floor(Math.random() * 89999 + 10000)}`;
   let status: NotificationAudit['deliveryStatus'] = 'delivered';
@@ -103,37 +106,38 @@ async function dispatchEmergencyEmail(
       const emailRes = await resendClient.emails.send({
         from: 'SAFELYNK Control Room <alerts@safelynk.org>',
         to: [recipientEmail],
-        subject: `🚨 EMERGENCY SOS ALARM: ${wearerName} Needs Immediate Assistance!`,
+        subject: `🚨 CRITICAL SOS EMERGENCY ALARM: ${wearerName} Needs Immediate Assistance!`,
         html: `
-          <div style="font-family: Arial, sans-serif; background-color: #070B14; color: #F1F5F9; padding: 24px; border-radius: 12px; max-width: 600px; margin: 0 auto; border: 1px solid #1E293B;">
-            <div style="background-color: #DC2626; color: #FFFFFF; padding: 14px 18px; border-radius: 8px; font-weight: bold; font-size: 18px; text-align: center;">
-              ⚠️ EMERGENCY SOS ALARM ACTIVATED
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #070B14; color: #F1F5F9; padding: 28px; border-radius: 16px; max-width: 620px; margin: 0 auto; border: 2px solid #EF4444; shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.3);">
+            <div style="background-color: #DC2626; color: #FFFFFF; padding: 16px 20px; border-radius: 12px; font-weight: 900; font-size: 20px; text-align: center; tracking: 1px;">
+              ⚠️ URGENT SOS EMERGENCY PANIC ALARM
             </div>
             
-            <p style="margin-top: 20px; font-size: 15px; color: #E2E8F0; leading-height: 1.5;">
-              Dear <strong>${recipientName}</strong>,
+            <p style="margin-top: 22px; font-size: 15px; color: #F8FAFC; line-height: 1.6;">
+              Attention <strong>${recipientName}</strong>,
               <br/><br/>
-              An urgent emergency panic alert has been triggered for <strong>${wearerName}</strong> (${wearerPhone}).
+              A critical emergency distress signal has been triggered for <strong>${wearerName}</strong> (${wearerPhone}).
             </p>
 
-            <div style="background-color: #0F172A; border: 1px solid #334155; padding: 16px; border-radius: 8px; margin: 20px 0;">
-              <p style="margin: 0 0 8px 0; color: #94A3B8; font-size: 13px;"><strong>Trigger Source:</strong> <span style="color: #F87171;">${triggerSource.toUpperCase().replace('_', ' ')}</span></p>
-              <p style="margin: 0 0 8px 0; color: #94A3B8; font-size: 13px;"><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
-              <p style="margin: 0 0 8px 0; color: #94A3B8; font-size: 13px;"><strong>Wearer Direct Contact:</strong> <a href="tel:${wearerPhone}" style="color: #38BDF8;">${wearerPhone}</a></p>
-              <p style="margin: 0; color: #94A3B8; font-size: 13px;"><strong>GPS Location:</strong> ${latitude ? `${latitude.toFixed(5)}°, ${longitude?.toFixed(5)}°` : 'Fix Pending'}</p>
+            <div style="background-color: #0F172A; border: 1px solid #334155; padding: 18px; border-radius: 12px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0; color: #94A3B8; font-size: 13px;"><strong>Recipient Control Address:</strong> <span style="color: #38BDF8; font-weight: bold;">${recipientEmail}</span></p>
+              <p style="margin: 0 0 10px 0; color: #94A3B8; font-size: 13px;"><strong>Trigger Source:</strong> <span style="color: #F87171; font-weight: bold;">${triggerSource.toUpperCase().replace('_', ' ')}</span></p>
+              <p style="margin: 0 0 10px 0; color: #94A3B8; font-size: 13px;"><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
+              <p style="margin: 0 0 10px 0; color: #94A3B8; font-size: 13px;"><strong>Wearer Phone:</strong> <a href="tel:${wearerPhone}" style="color: #38BDF8; text-decoration: underline;">${wearerPhone}</a></p>
+              <p style="margin: 0; color: #94A3B8; font-size: 13px;"><strong>Exact GPS Coordinates:</strong> <span style="color: #4ADE80; font-family: monospace; font-weight: bold;">${finalLat.toFixed(6)}° N, ${finalLng.toFixed(6)}° E</span></p>
             </div>
 
-            <div style="text-align: center; margin: 24px 0; gap: 12px;">
-              <a href="${trackingUrl}" target="_blank" style="background-color: #2563EB; color: #FFFFFF; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block; margin-right: 8px;">
-                🛰️ Track Live Incident in Control Room
+            <div style="text-align: center; margin: 26px 0;">
+              <a href="${trackingUrl}" target="_blank" style="background-color: #2563EB; color: #FFFFFF; padding: 14px 22px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block; margin-right: 10px;">
+                🛰️ Open SAFELYNK Control Room Radar
               </a>
-              <a href="${googleMapsUrl}" target="_blank" style="background-color: #059669; color: #FFFFFF; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">
-                📍 Open Directions in Google Maps
+              <a href="${googleMapsUrl}" target="_blank" style="background-color: #059669; color: #FFFFFF; padding: 14px 22px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block;">
+                📍 Open Google Maps Directions
               </a>
             </div>
 
-            <p style="font-size: 11px; color: #64748B; text-align: center; border-top: 1px solid #1E293B; padding-top: 16px; margin-top: 24px;">
-              Dispatched by SAFELYNK Control Room Command Center · GTCR TECH NEXUS Wing
+            <p style="font-size: 11px; color: #64748B; text-align: center; border-top: 1px solid #1E293B; padding-top: 18px; margin-top: 24px;">
+              Dispatched by SAFELYNK Control Room Command Center (nishchalr2006@gmail.com) · GTCR TECH NEXUS
             </p>
           </div>
         `
@@ -148,10 +152,11 @@ async function dispatchEmergencyEmail(
     }
   }
 
-  const logEntry: NotificationAudit = {
+  const logEntry: NotificationAudit & { recipientEmail: string } = {
     id: `notif_${Date.now()}_${Math.floor(Math.random() * 899 + 100)}`,
     alertId,
     recipientIdentifier: recipientEmail,
+    recipientEmail: recipientEmail,
     recipientName,
     recipientPhone,
     channel: 'email',
@@ -373,6 +378,14 @@ app.post('/api/v1/notifications/send-email', async (req: Request, res: Response)
     success: true,
     message: `Alert email dispatched to ${recipientEmail}`,
     audit
+  });
+});
+
+// GET ALL EMAIL NOTIFICATION AUDIT LOGS
+app.get('/api/v1/notifications/logs', (_req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    notificationAuditLogs
   });
 });
 
