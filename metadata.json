@@ -1,0 +1,6 @@
+{
+  "name": "SAFELYNK — Smart Predictive Women's Safety System",
+  "description": "Wearable-assisted personal safety system with real-time sensor monitoring, emergency SOS workflows, trusted contact alerts, and ESP32 hardware telemetry.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
