@@ -340,17 +340,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onShowToast }) =
               <h3 className="text-sm font-bold text-white">Send Instant Emergency Email Alert</h3>
             </div>
             <p className="text-xs text-slate-400">
-              Enter any recipient email to dispatch an emergency notification containing direct live tracking links and map directions.
+              Dispatches emergency notifications with live tracking links directly to Control Room (<code className="text-cyan-300 font-mono">nishchalr2006@gmail.com</code>) or any recipient.
             </p>
 
             <form onSubmit={handleSendCustomAlertEmail} className="space-y-3 mt-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Recipient Name</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-300">Recipient Name</label>
+                  <button
+                    type="button"
+                    onClick={() => { setCustomName('Nishchal R (Control Room)'); setCustomEmail('nishchalr2006@gmail.com'); }}
+                    className="text-[10px] text-cyan-400 hover:underline font-mono"
+                  >
+                    + Fill Control Room Email
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={customName}
                   onChange={e => setCustomName(e.target.value)}
-                  placeholder="e.g. Officer Johnson / Guardian"
+                  placeholder="e.g. Nishchal R (Control Room)"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                 />
               </div>
@@ -362,7 +371,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onShowToast }) =
                   required
                   value={customEmail}
                   onChange={e => setCustomEmail(e.target.value)}
-                  placeholder="guardian@example.com"
+                  placeholder="nishchalr2006@gmail.com"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                 />
               </div>
@@ -379,9 +388,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onShowToast }) =
           </div>
 
           <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 space-y-1">
+            <p className="text-emerald-400 font-semibold">✓ Default Control Room: nishchalr2006@gmail.com</p>
             <p>✔ Includes direct tracking URL (<code className="text-cyan-300 font-mono">?sosId=...</code>)</p>
             <p>✔ Includes Google Maps GPS route directions link</p>
-            <p>✔ Includes direct contact telephone links</p>
           </div>
         </div>
       </div>

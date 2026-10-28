@@ -249,12 +249,12 @@ app.post('/api/v1/device/telemetry', async (req: Request, res: Response) => {
     };
     sosIncidentsStore.unshift(sosEvent);
 
-    // Dispatch real email alert to primary contact
+    // Dispatch real email alert directly to Control Room Command Center (nishchalr2006@gmail.com)
     const notifAudit = await dispatchEmergencyEmail(
       sosId,
-      'david.jenkins@example.com',
-      'David Jenkins (Dad)',
-      '+1 (555) 987-6543',
+      'nishchalr2006@gmail.com',
+      'Nishchal R (Control Room)',
+      '+91 98765 43210',
       sosEvent.wearerName,
       sosEvent.wearerPhone,
       'physical_button',
@@ -313,19 +313,25 @@ app.post('/api/v1/demo/trigger-sos', async (req: Request, res: Response) => {
   };
   sosIncidentsStore.unshift(updatedSOS);
 
-  // Dispatch email alerts to connected contacts
+  // Dispatch email alerts to connected contacts plus default Control Room (nishchalr2006@gmail.com)
   const logs: NotificationAudit[] = [];
-  const contactsToNotify = trustedContacts.length > 0 ? trustedContacts : [
-    { contactEmail: 'david.jenkins@example.com', contactName: 'David Jenkins (Dad)', phoneNumber: '+1 (555) 987-6543' },
-    { contactEmail: 'emily.carter@example.com', contactName: 'Emily Carter', phoneNumber: '+1 (555) 345-6789' }
+  const defaultControlRoomContact = { contactEmail: 'nishchalr2006@gmail.com', contactName: 'Nishchal R (Control Room)', phoneNumber: '+91 98765 43210' };
+  
+  const rawContacts = trustedContacts.length > 0 ? trustedContacts : [
+    defaultControlRoomContact,
+    { contactEmail: 'david.jenkins@example.com', contactName: 'David Jenkins (Dad)', phoneNumber: '+1 (555) 987-6543' }
   ];
+
+  // Ensure Control Room email nishchalr2006@gmail.com is always included in dispatch
+  const hasControlRoom = rawContacts.some((c: any) => c.contactEmail === 'nishchalr2006@gmail.com');
+  const contactsToNotify = hasControlRoom ? rawContacts : [defaultControlRoomContact, ...rawContacts];
 
   for (const tc of contactsToNotify) {
     const audit = await dispatchEmergencyEmail(
       updatedSOS.id,
-      tc.contactEmail || 'david.jenkins@example.com',
-      tc.contactName || 'Trusted Contact',
-      tc.phoneNumber || '+1 (555) 987-6543',
+      tc.contactEmail || 'nishchalr2006@gmail.com',
+      tc.contactName || 'Control Room / Guardian',
+      tc.phoneNumber || '+91 98765 43210',
       updatedSOS.wearerName,
       updatedSOS.wearerPhone,
       updatedSOS.triggerSource,

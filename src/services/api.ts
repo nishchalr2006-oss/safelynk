@@ -35,10 +35,10 @@ const MOCK_PARENT_PROFILE: UserProfile = {
 
 const MOCK_ADMIN_PROFILE: UserProfile = {
   id: 'usr_admin_03',
-  email: 'admin.monitoring@safelynk.org',
-  displayName: 'System Admin Monitor',
+  email: 'nishchalr2006@gmail.com',
+  displayName: 'Control Room Command Center (Nishchal R)',
   role: 'administrator',
-  phoneNumber: '+1 (800) 555-SAFE',
+  phoneNumber: '+91 98765 43210',
   createdAt: '2026-01-01T00:00:00Z'
 };
 
@@ -56,13 +56,13 @@ const MOCK_DEVICE: Device = {
 
 const MOCK_TRUSTED_CONTACTS: TrustedContact[] = [
   {
-    id: 'tc_david_01',
+    id: 'tc_control_room_01',
     wearerId: 'usr_wearer_sarah_01',
-    contactUserId: 'usr_contact_david_02',
-    contactName: 'David Jenkins',
-    contactEmail: 'david.jenkins@example.com',
-    phoneNumber: '+1 (555) 987-6543',
-    relationship: 'Father / Primary Guardian',
+    contactUserId: 'usr_admin_03',
+    contactName: 'Nishchal R',
+    contactEmail: 'nishchalr2006@gmail.com',
+    phoneNumber: '+91 98765 43210',
+    relationship: 'Control Room Command Center & Primary Guardian',
     invitationStatus: 'accepted',
     notificationChannels: ['email', 'sms'],
     priority: 1,
@@ -75,7 +75,7 @@ const MOCK_TRUSTED_CONTACTS: TrustedContact[] = [
     contactName: 'Emily Carter',
     contactEmail: 'emily.carter@example.com',
     phoneNumber: '+1 (555) 345-6789',
-    relationship: 'Roommate',
+    relationship: 'Roommate / Guardian',
     invitationStatus: 'accepted',
     notificationChannels: ['email'],
     priority: 2,
