@@ -13,6 +13,7 @@ import {
   AlertSeverity
 } from '../types/safelynk';
 import { locationService } from './locationService';
+import { audioService } from './audioService';
 
 const MOCK_WEARER_PROFILE: UserProfile = {
   id: 'usr_wearer_sarah_01',
@@ -398,6 +399,9 @@ class ApiService {
     this.activeSafetyCheck = null;
     this.systemState = 'SOS_ACTIVE';
 
+    // Start Loud Emergency Siren Audio
+    audioService.startSiren();
+
     // Dispatch via Express API endpoint
     try {
       const resp = await fetch('/api/v1/demo/trigger-sos', {
@@ -475,6 +479,9 @@ class ApiService {
     this.sosHistory = this.sosHistory.map(item =>
       item.id === resolvedEvent.id ? resolvedEvent : item
     );
+
+    // Stop Loud Siren Audio
+    audioService.stopSiren();
 
     this.saveState();
   }

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserProfile, SOSEvent } from '../types/safelynk';
-import { ShieldAlert, User, LogOut, Radio, Activity, Users, Settings, Award, Info } from 'lucide-react';
+import { ShieldAlert, User, LogOut, Radio, Activity, Users, Settings, Award, Volume2, VolumeX, BellRing } from 'lucide-react';
+import { audioService } from '../services/audioService';
 
 interface NavigationProps {
   currentUser: UserProfile | null;
@@ -19,6 +20,21 @@ export const Navigation: React.FC<NavigationProps> = ({
   onOpenAuth,
   onLogout
 }) => {
+  const [isSirenPlaying, setIsSirenPlaying] = useState(false);
+
+  useEffect(() => {
+    // Keep siren playing state synced
+    const interval = setInterval(() => {
+      setIsSirenPlaying(audioService.getIsPlaying());
+    }, 250);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleToggleSiren = () => {
+    const playing = audioService.toggleSiren();
+    setIsSirenPlaying(playing);
+  };
+
   return (
     <>
       {/* 0. TOP ANIMATED TICKER BANNER: YOUR SAFETY. CONNECTED. ALWAYS. */}
@@ -53,6 +69,18 @@ export const Navigation: React.FC<NavigationProps> = ({
             </div>
           </div>
           <div className="hidden lg:flex items-center gap-2 shrink-0 text-xs font-mono">
+            <button
+              onClick={handleToggleSiren}
+              className={`px-3 py-1 rounded-full border text-xs font-bold flex items-center gap-1.5 transition-all ${
+                isSirenPlaying
+                  ? 'bg-red-600 border-red-400 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.8)]'
+                  : 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white hover:border-cyan-500'
+              }`}
+              title="Test Loud Emergency Siren Audio"
+            >
+              {isSirenPlaying ? <Volume2 className="w-4 h-4 animate-bounce" /> : <VolumeX className="w-4 h-4" />}
+              <span>{isSirenPlaying ? 'SIREN ACTIVE' : 'TEST SIREN'}</span>
+            </button>
             <span className="px-3 py-1 rounded-full bg-cyan-950 border border-cyan-500/60 text-cyan-300 font-black uppercase tracking-widest shadow-[0_0_10px_rgba(6,182,212,0.3)]">
               STATUS: NOMINAL
             </span>
@@ -69,12 +97,25 @@ export const Navigation: React.FC<NavigationProps> = ({
               EMERGENCY SOS ACTIVE: {activeSOS.wearerName || 'Sarah'} triggered alert ({activeSOS.triggerSource.toUpperCase().replace('_', ' ')})
             </span>
           </div>
-          <button
-            onClick={() => setActiveTab(currentUser?.role === 'trusted_contact' ? 'trusted' : 'wearer')}
-            className="px-3.5 py-1.5 bg-white text-red-700 font-extrabold rounded-lg text-xs hover:bg-slate-100 transition-colors shrink-0 shadow-md"
-          >
-            VIEW INCIDENT
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleToggleSiren}
+              className={`px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all shadow-md ${
+                isSirenPlaying
+                  ? 'bg-red-950 text-red-200 border border-red-400'
+                  : 'bg-black text-white hover:bg-slate-900'
+              }`}
+            >
+              {isSirenPlaying ? <Volume2 className="w-4 h-4 text-amber-300 animate-pulse" /> : <VolumeX className="w-4 h-4" />}
+              <span>{isSirenPlaying ? 'MUTE SIREN' : 'SOUND SIREN'}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab(currentUser?.role === 'trusted_contact' ? 'trusted' : 'wearer')}
+              className="px-3.5 py-1.5 bg-white text-red-700 font-extrabold rounded-lg text-xs hover:bg-slate-100 transition-colors shadow-md"
+            >
+              VIEW INCIDENT
+            </button>
+          </div>
         </div>
       )}
 

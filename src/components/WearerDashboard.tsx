@@ -4,6 +4,7 @@ import { Device, SensorReading, SafetyCheck, SOSEvent } from '../types/safelynk'
 import { InteractiveMap } from './InteractiveMap';
 import { ActivityTimeline } from './ActivityTimeline';
 import { locationService, RealTimeLocation } from '../services/locationService';
+import { audioService } from '../services/audioService';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -86,6 +87,7 @@ export const WearerDashboard: React.FC<WearerDashboardProps> = ({ onShowToast })
   // Handle Hold-to-SOS Timer (2.5 seconds hold)
   const handleSOSMouseDown = () => {
     if (activeSOS) return;
+    audioService.playAlertBeep();
     setIsHoldingSOS(true);
     setHoldProgress(0);
 
